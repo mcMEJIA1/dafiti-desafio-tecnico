@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.service: listener
+  name: listener
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.service: listener
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.service: listener
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - sleep 10 && python -u main.py
+          image: listener
+          name: listener
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"

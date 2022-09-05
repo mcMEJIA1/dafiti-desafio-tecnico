@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap 
+metadata:
+  name: rabbitmq-map
+data:
+  RABBITMQ_DEFAULT_PASS: "pass"
+  RABBITMQ_DEFAULT_USER: "user"
+  RABBITMQ_DEFAULT_VHOST: "/"
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.service: rabbitmq
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.service: rabbitmq
+  template:
+    metadata:
+      labels:
+        io.service: rabbitmq
+    spec:
+      containers:
+        - env:
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbitmq-map
+                  key: RABBITMQ_DEFAULT_PASS
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbitmq-map
+                  key: RABBITMQ_DEFAULT_USER
+            - name: RABBITMQ_DEFAULT_VHOST
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbitmq-map
+                  key: RABBITMQ_DEFAULT_VHOST
+          image: rabbitmq
+          name: rabbitmq
+      restartPolicy: Always
+---
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.service: rabbitmq
+  name: rabbitmq
+spec:
+  ports:
+    - port: 5672
+      targetPort: 5672
+  selector:
+    io.service: rabbitmq
+status:
+  loadBalancer: {}

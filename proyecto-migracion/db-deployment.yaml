@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap 
+metadata:
+  name: postgress-map
+data:
+  POSTGRES_DB: "devops"
+  POSTGRES_HOST: "db"
+  POSTGRES_PASSWORD: "devops"
+  POSTGRES_USER: "devops"
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.service: db
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.service: db
+  template:
+    metadata:
+      labels:
+        io.service: db
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: postgress-map
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: postgress-map
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: postgress-map
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: postgress-map
+                  key: POSTGRES_USER
+          image: postgres
+          name: db
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          volumeMounts:
+                - mountPath: /var/lib/postgresql/data
+                  name: db-claim0
+      volumes:
+        - name: db-claim0
+          persistentVolumeClaim:
+            claimName: postgres-claim0
+---
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.service: db
+  name: db
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    io.service: db
+status:
+  loadBalancer: {}
